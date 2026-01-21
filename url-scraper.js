@@ -114,7 +114,10 @@ async function fetchDataRecursive() {
         if (json.length === 0) return jsonData;
       } else if (json && Array.isArray(json.locations)) {
         // Case: API returns { locations: [...] }
-        console.log("✅ JSON has 'locations' array with length:", json.locations.length);
+        console.log(
+          "✅ JSON has 'locations' array with length:",
+          json.locations.length
+        );
         jsonData.push(...json.locations);
         if (json.locations.length === 0) return jsonData;
       } else if (json && Object.keys(json).length === 0) {
@@ -140,7 +143,6 @@ async function fetchDataRecursive() {
 
   return fetchAndStoreData(locationsJsonUrl, [], pageIteration);
 }
-
 
 function removeSpecialChars(str) {
   return str
@@ -221,10 +223,7 @@ function parseData(jsonData, domainType, vertical, domain) {
     };
 
     if (domainType === "multiDomain") {
-      console.log("checking naked domain ===>", location.naked_domain)
-      console.log("checking multidomain name ===>", location.domain)
-      // base.url = location.naked_domain;
-      base.url = location.domain;
+      base.url = normalizeDomain(location.domain || location.home_page_url);
     } else {
       base.url = domain;
       const verticalSegment = location.custom_vertical || vertical;
@@ -237,14 +236,23 @@ function parseData(jsonData, domainType, vertical, domain) {
   });
 }
 
+function normalizeDomain(url) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname; // e.g. "www.arlingtongardens.com"
+  } catch {
+    return url.replace(/^https?:\/\//, ""); // fallback
+  }
+}
+
 function buildLiveUrl(url, path, corp, domainType) {
+  if (!url) return null;
   if (domainType === "singleDomain") {
     return !path || corp ? url : `${url}/${path}`;
-  } else {
-    if (!url) return "undefined";
-    const hasSubdomain = url.split(".").length >= 3 || url.includes("www.");
-    return hasSubdomain ? `https://${url}` : `https://www.${url}`;
   }
+  const hasSubdomain = url.split(".").length >= 3 || url.includes("www.");
+  return hasSubdomain ? `https://${url}` : `https://www.${url}`;
 }
 
 function buildStaticUrl(url, path, corp, domainType) {
