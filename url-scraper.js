@@ -87,6 +87,7 @@ if (isClientHubPage()) {
 
 async function fetchDataRecursive() {
   console.log("PMC Details ===>", clientData);
+
   let pageIteration = 1;
   let locationsJsonUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientData.urn}/locations.json?order=name_asc&page=${pageIteration}`;
 
@@ -98,7 +99,6 @@ async function fetchDataRecursive() {
       );
     }
     let json = await fetchResult.json();
-    console.log("Fetched Data ===>", json);
     return json;
   }
 
@@ -107,35 +107,40 @@ async function fetchDataRecursive() {
       let json = await getJsonData(url);
       console.log("json before pushing to [] ===>", json);
 
-      // Handle array vs object
       if (Array.isArray(json)) {
+        // Case: API returns raw array
         console.log("✅ JSON is an array with length:", json.length);
         jsonData.push(...json);
-        if (json.length === 0) return jsonData; // stop if no more data
+        if (json.length === 0) return jsonData;
       } else if (json && Array.isArray(json.locations)) {
-        console.log(
-          "✅ JSON has 'locations' array with length:",
-          json.locations.length
-        );
+        // Case: API returns { locations: [...] }
+        console.log("✅ JSON has 'locations' array with length:", json.locations.length);
         jsonData.push(...json.locations);
-        if (json.locations.length === 0) return jsonData; // stop if no more data
+        if (json.locations.length === 0) return jsonData;
+      } else if (json && Object.keys(json).length === 0) {
+        // Case: API returns {} when no more pages
+        console.log("ℹ️ Empty JSON object, stopping at page:", pageIteration);
+        return jsonData;
       } else {
+        // Unexpected format
         console.warn("⚠️ Unexpected JSON format:", json);
-        return jsonData; // stop if format is wrong
+        return jsonData;
       }
 
-      
       pageIteration++;
       let nextUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientData.urn}/locations.json?order=name_asc&page=${pageIteration}`;
       return fetchAndStoreData(nextUrl, jsonData, pageIteration);
     } catch (error) {
-      console.error(error);
+      console.error("❌ Error in fetchAndStoreData:", error);
     }
+
     console.log("Final Json data ===>", jsonData);
     return jsonData;
   }
+
   return fetchAndStoreData(locationsJsonUrl, [], pageIteration);
 }
+
 
 function removeSpecialChars(str) {
   return str
