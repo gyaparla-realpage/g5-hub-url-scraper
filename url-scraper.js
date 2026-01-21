@@ -255,30 +255,34 @@ function buildLiveUrl(url, path, corp, domainType) {
   return hasSubdomain ? `https://${url}` : `https://www.${url}`;
 }
 
+
+function normalizeForStatic(url) {
+  if (!url) return null;
+  // Strip protocol if present
+  url = url.replace(/^https?:\/\//, "");
+  // Replace all dots with dashes
+  return url.replace(/\./g, "-");
+}
+
+
 function buildStaticUrl(url, path, corp, domainType) {
-  if (!url) return "undefined";
+  if (!url) return null;
 
   if (domainType === "singleDomain") {
     url = url.replace("https://", "http://") + ".g5static.com";
     return !path || corp ? url : `${url}/${path}`;
   } else {
-    const hasSubdomain = url.split(".").length >= 3 || url.includes("www.");
-    return hasSubdomain
-      ? `http://${url}.g5static.com`
-      : `http://www.${url}.g5static.com`;
+    const normalized = normalizeForStatic(url);
+    return `http://${normalized}.g5static.com`;
   }
 }
 
 function buildStagingUrl(url, path, corp, domainType) {
-  if (!url) return "undefined";
+  if (!url) return null;
 
-  const tld = extractTLD(url);
-  const domainName = extractDomainName(url);
-  const subDomain = extractSubdomain(url);
-
-  let baseUrl = subDomain
-    ? `http://${subDomain}.${domainName}-staging.${tld}.g5static.com`
-    : `http://www.${domainName}-staging.${tld}.g5static.com`;
+  const normalized = normalizeForStatic(url);
+  const staging = normalized + "-staging";
+  const baseUrl = `http://${staging}.g5static.com`;
 
   if (domainType === "singleDomain") {
     return !path || corp ? baseUrl : `${baseUrl}/${path}`;
@@ -286,6 +290,7 @@ function buildStagingUrl(url, path, corp, domainType) {
     return baseUrl;
   }
 }
+
 
 async function buildUrls() {
   const domainType = determineDomainType();
