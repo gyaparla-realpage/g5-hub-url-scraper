@@ -223,7 +223,8 @@ function parseData(jsonData, domainType, vertical, domain) {
     if (domainType === "multiDomain") {
       console.log("checking naked domain ===>", location.naked_domain)
       console.log("checking multidomain name ===>", location.domain)
-      base.url = location.naked_domain;
+      // base.url = location.naked_domain;
+      base.url = location.domain;
     } else {
       base.url = domain;
       const verticalSegment = location.custom_vertical || vertical;
