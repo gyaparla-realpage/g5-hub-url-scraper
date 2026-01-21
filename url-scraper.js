@@ -86,7 +86,7 @@ if (isClientHubPage()) {
 }
 
 async function fetchDataRecursive() {
-  console.log("PMC Details ===>", clientData)
+  console.log("PMC Details ===>", clientData);
   let pageIteration = 1;
   let locationsJsonUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientData.urn}/locations.json?order=name_asc&page=${pageIteration}`;
 
@@ -98,22 +98,40 @@ async function fetchDataRecursive() {
       );
     }
     let json = await fetchResult.json();
-    console.log("Fetched Data ===>", json)
+    console.log("Fetched Data ===>", json);
     return json;
   }
 
   async function fetchAndStoreData(url, jsonData = [], pageIteration) {
     try {
       let json = await getJsonData(url);
-      console.log("json before pushing to [] ===>", json)
-      jsonData.push(...json);
+      console.log("json before pushing to [] ===>", json);
+
+      // Handle array vs object
+      if (Array.isArray(json)) {
+        console.log("✅ JSON is an array with length:", json.length);
+        jsonData.push(...json);
+        if (json.length === 0) return jsonData; // stop if no more data
+      } else if (json && Array.isArray(json.locations)) {
+        console.log(
+          "✅ JSON has 'locations' array with length:",
+          json.locations.length
+        );
+        jsonData.push(...json.locations);
+        if (json.locations.length === 0) return jsonData; // stop if no more data
+      } else {
+        console.warn("⚠️ Unexpected JSON format:", json);
+        return jsonData; // stop if format is wrong
+      }
+
+      
       pageIteration++;
       let nextUrl = `https://hub.g5marketingcloud.com/admin/clients/${clientData.urn}/locations.json?order=name_asc&page=${pageIteration}`;
       return fetchAndStoreData(nextUrl, jsonData, pageIteration);
     } catch (error) {
       console.error(error);
     }
-    console.log("Final Json data ===>", jsonData)
+    console.log("Final Json data ===>", jsonData);
     return jsonData;
   }
   return fetchAndStoreData(locationsJsonUrl, [], pageIteration);
@@ -832,17 +850,14 @@ if (!isClientHubPage()) {
   functionStartAlert();
 }
 
-
-
-
 //////////////////////////////////////////////////////////
 
-// javascript:(function() { 
-//     var rawFileUrl = 'https://raw.githubusercontent.com/Reddy054/g5-hub-url-scraper/main/main/url-scraper.js'; 
-//     fetch(rawFileUrl) 
-//         .then(response => response.text()) 
-//         .then(code => { 
-//             eval(code); 
-//         }) 
-//         .catch(error => console.error('Error fetching code:', error)); 
+// javascript:(function() {
+//     var rawFileUrl = 'https://raw.githubusercontent.com/Reddy054/g5-hub-url-scraper/main/main/url-scraper.js';
+//     fetch(rawFileUrl)
+//         .then(response => response.text())
+//         .then(code => {
+//             eval(code);
+//         })
+//         .catch(error => console.error('Error fetching code:', error));
 // })();
