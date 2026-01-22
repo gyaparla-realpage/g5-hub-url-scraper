@@ -267,12 +267,13 @@ function normalizeForStatic(url) {
 function buildStaticUrl(url, path, corp, domainType) {
   if (!url) return null;
 
+  const normalized = normalizeForStatic(url);
+
   if (domainType === "singleDomain") {
-    url = url.replace("https://", "http://") + ".g5static.com";
-    return !path || corp ? url : `${url}/${path}`;
+    const staticUrl = `https://${normalized}.g5static.com`;
+    return !path || corp ? staticUrl : `${staticUrl}/${path}`;
   } else {
-    const normalized = normalizeForStatic(url);
-    return `http://${normalized}.g5static.com`;
+    return `https://${normalized}.g5static.com`;
   }
 }
 
@@ -291,6 +292,7 @@ function buildStagingUrl(url, path, corp, domainType) {
     return baseUrl;
   }
 }
+
 
 
 
