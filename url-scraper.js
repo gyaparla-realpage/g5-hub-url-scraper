@@ -260,10 +260,9 @@ function normalizeForStatic(url) {
   if (!url) return null;
   // Strip protocol if present
   url = url.replace(/^https?:\/\//, "");
-  // Replace all dots with dashes
+  // Replace dots with dashes
   return url.replace(/\./g, "-");
 }
-
 
 function buildStaticUrl(url, path, corp, domainType) {
   if (!url) return null;
@@ -280,9 +279,11 @@ function buildStaticUrl(url, path, corp, domainType) {
 function buildStagingUrl(url, path, corp, domainType) {
   if (!url) return null;
 
-  const normalized = normalizeForStatic(url);
-  const staging = normalized + "-staging";
-  const baseUrl = `http://${staging}.g5static.com`;
+  let normalized = normalizeForStatic(url);
+  // Insert "-staging" before the last dash segment (the TLD)
+  normalized = normalized.replace(/-([^-]+)$/, "-staging-$1");
+
+  const baseUrl = `https://${normalized}.g5static.com`;
 
   if (domainType === "singleDomain") {
     return !path || corp ? baseUrl : `${baseUrl}/${path}`;
@@ -290,6 +291,7 @@ function buildStagingUrl(url, path, corp, domainType) {
     return baseUrl;
   }
 }
+
 
 
 async function buildUrls() {
